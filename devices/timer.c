@@ -92,12 +92,13 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  /*int64_t start = timer_ticks ();*/
-  thread_current().wakeup_time = ticks + timer_ticks();  // set current thread's wakeup time
-  list_push_back(sleep_list, thread_current())  // add current thread to end of sleep_list
+  thread_current()->wakeup_time = ticks + timer_ticks();  // set current thread's wakeup time
   ASSERT (intr_get_level () == INTR_ON);  // Is this assert important without the old code? 
-  /*while (timer_elapsed (start) < ticks) 
-    thread_yield ();*/
+  // TODO disable interrupts 
+  list_push_back(sleep_list, thread_current())  // add current thread to end of sleep_list
+  // TODO renable interrupts 
+  // TODO call sema_down()
+  // TODO do the opposite-ish in timer interrupt
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
