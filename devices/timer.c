@@ -37,7 +37,8 @@ struct list sleep_list;
 void
 timer_init (void) 
 {
-  list_init(&sleep_list); //initialize sleep_list 
+  list_init(&sleep_list); //initialize sleep_list
+    
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
 }
@@ -94,11 +95,11 @@ timer_sleep (int64_t ticks)
 {
   thread_current()->wakeup_time = ticks + timer_ticks();  // set current thread's wakeup time
   ASSERT (intr_get_level () == INTR_ON);  // Is this assert important without the old code? 
-  // TODO disable interrupts 
-  list_push_back(sleep_list, thread_current())  // add current thread to end of sleep_list
-  // TODO renable interrupts 
-  // TODO call sema_down()
-  // TODO do the opposite-ish in timer interrupt
+
+  intr_disable();
+  list_push_back(sleep_list, *thread_current());  // add current thread to end of sleep_list
+  intr_enable();
+  sema_down(thread_current()->sleep_semaphore);  // block current thread
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -178,7 +179,20 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-  
+  enum intr_level intr_original = intr_disable();
+  struct thread *thread;
+  struct list_elem *e;
+  e = list_begin(&sleep_list);
+  while ( e!=list_end(&sleep_list) {
+    thread = list_entry(list_front(&sleep_list), struct thread, sleep_elem);
+    if (t->wakeup_time >= ticks) {  // Unblock if wakeup time has arrived
+      e = list_remove(e);
+      sema_up(&thread->sleep_semaphore);
+    } else {
+      (e = list_next(e));
+    }
+  }
+    inter_set_level(intr_original);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

@@ -92,6 +92,8 @@ struct thread
 
     /* Addition by David Schmitt for Alarm Clock*/
     int64_t wakeup_time;
+    struct semaphore sleep_semaphore;
+    struct list_elem sleep_elem;  // list element for sleep_list
     
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */

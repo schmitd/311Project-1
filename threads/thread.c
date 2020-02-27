@@ -92,6 +92,8 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  /*initialize sleep_semaphore for use in timer_sleep() and timer_interupt()*/
+  sema_init(sleep_semaphore, 0); 
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
