@@ -179,7 +179,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-  enum intr_level intr_original = intr_disable();
+  intr_disable();
   struct thread *thread;
   struct list_elem *e;
   e = list_begin(&sleep_list);
@@ -192,7 +192,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
       (e = list_next(e));
     }
   }
-    inter_set_level(intr_original);
+  intr_enable();
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
