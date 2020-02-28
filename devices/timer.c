@@ -179,20 +179,18 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-  intr_disable();
   struct thread *thread;
   struct list_elem *e;
   e = list_begin(&sleep_list);
   while ( e!=list_end(&sleep_list) ) {
-    thread = list_entry(list_front(&sleep_list), struct thread, sleep_elem);
-    if (thread->wakeup_time >= ticks) {  // Unblock if wakeup time has arrived
+    thread = list_entry(e, struct thread, sleep_elem);
+    if (thread->wakeup_time <= ticks) {  // Unblock if wakeup time has arrived
       e = list_remove(e);
       sema_up(&thread->sleep_semaphore);
     } else {
       (e = list_next(e));
     }
   }
-  intr_enable();
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
