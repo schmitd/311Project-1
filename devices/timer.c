@@ -97,9 +97,9 @@ timer_sleep (int64_t ticks)
   ASSERT (intr_get_level () == INTR_ON);  // Is this assert important without the old code? 
 
   intr_disable();
-  list_push_back(sleep_list, *thread_current());  // add current thread to end of sleep_list
+  list_push_back(&sleep_list, &thread_current()->sleep_elem);  // add current thread to end of sleep_list
   intr_enable();
-  sema_down(thread_current()->sleep_semaphore);  // block current thread
+  sema_down(&thread_current()->sleep_semaphore);  // block current thread
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -183,9 +183,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
   struct thread *thread;
   struct list_elem *e;
   e = list_begin(&sleep_list);
-  while ( e!=list_end(&sleep_list) {
+  while ( e!=list_end(&sleep_list) ) {
     thread = list_entry(list_front(&sleep_list), struct thread, sleep_elem);
-    if (t->wakeup_time >= ticks) {  // Unblock if wakeup time has arrived
+    if (thread->wakeup_time >= ticks) {  // Unblock if wakeup time has arrived
       e = list_remove(e);
       sema_up(&thread->sleep_semaphore);
     } else {
